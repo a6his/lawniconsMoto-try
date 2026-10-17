@@ -95,10 +95,45 @@ object SvgFilesProcessor {
             } catch (e: DocumentException) {
                 throw RuntimeException(e)
             }
-            createAdaptive(targetFile, bg)
+            if (FilenameUtils.getBaseName(targetFile) == "generic_clock") {
+                val foregroundXml = targetFile.replace(".xml", "_foreground.xml")
+                FileUtils.copyFile(FileUtils.getFile(targetFile), FileUtils.getFile(foregroundXml))
+                createGenericClock(targetFile, bg)
+            } else {
+                createAdaptive(targetFile, bg)
+            }
         } else {
             println("Skipping file as its not svg " + svgSource.fileName)
         }
+    }
+
+    @Throws(IOException::class)
+    private fun createGenericClock(xmlPath: String, bgColor: String) {
+        val foregroundXml = xmlPath.replace(".xml", "_foreground.xml")
+        val foregroundName = FilenameUtils.getBaseName(foregroundXml)
+        val document = DocumentHelper.createDocument()
+        val root = document.addElement("adaptive-icon")
+            .addAttribute("xmlns:android", "http://schemas.android.com/apk/res/android")
+        root.addElement("background")
+            .addAttribute("android:drawable", bgColor)
+
+        val foregroundElementLayerlist = root.addElement("foreground").addElement("layer-list")
+        foregroundElementLayerlist.addElement("item").addElement("inset")
+            .addAttribute("android:inset", "32%")
+            .addAttribute(
+                "android:drawable",
+                "@drawable/$foregroundName",
+            )
+
+        val monochromeElementLayerlist = root.addElement("monochrome").addElement("layer-list")
+        monochromeElementLayerlist.addElement("item").addElement("inset")
+            .addAttribute("android:inset", "28%")
+            .addAttribute(
+                "android:drawable",
+                "@drawable/$foregroundName",
+            )
+
+        XmlUtil.writeDocumentToFile(document, xmlPath)
     }
 
     @Throws(IOException::class)

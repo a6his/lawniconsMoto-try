@@ -37,11 +37,11 @@ object AppfilterDiffCreator {
             val tags = runGitCommand(listOf("tag", "--sort=-creatordate"))
             val latestTag =
                 customTag.ifEmpty {
-                    tags.firstOrNull { it != "nightly" } ?: {
+                    tags.firstOrNull { it != "nightly" } ?: run {
                         // fallback to `main` branch
                         val fallbackTags = runGitCommand(listOf("show", "main"))
 
-                        fallbackTags.firstOrNull() ?: throw RuntimeException("No tags found")
+                        if (fallbackTags.isNotEmpty()) "main" else throw RuntimeException("No tags found")
                     }
                 }
 
